@@ -1,0 +1,8 @@
+storage_dir = "./test-data/var"
+conf_dir = "./test-data/conf.d"
+
+[arango]
+url = "http://localhost:8529"
+username = "alox"
+password = "alox"
+db = "alox"

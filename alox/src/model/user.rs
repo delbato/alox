@@ -1,43 +1,14 @@
-use crate::{
-    model::Model
+use serde::{
+    Serialize,
+    Deserialize
 };
 
-use noria::{
-    DataType
-};
-
-macro_rules! get_string {
-    ($row:expr) => {
-        match $row {
-            DataType::Text(c_str) => {
-                let raw_str = c_str.to_str().map_err(|_| ())?;
-                String::from(raw_str)
-            },
-            _ => return Err(())
-        }
-    };
-}
-
-macro_rules! get_bool {
-    ($row:expr) => {
-        match $row {
-            DataType::UnsignedInt(uint) => if *uint == 0 { false } else { true },
-            _ => return Err(())
-        }
-    };
-}
-
-macro_rules! get_i64 {
-    ($row:expr) => {
-        match $row {
-            DataType::BigInt(int) => *int,
-            _ => return Err(())
-        }
-    };
-}
-
+#[derive(Debug, Serialize, Deserialize)]
 pub struct User {
-    pub id: i64,
+    #[serde(rename = "_id")]
+    pub id: Option<String>,
+    #[serde(rename = "_key")]
+    pub key: Option<String>,
     pub username: String,
     pub email: String,
     pub password: String,
@@ -45,10 +16,22 @@ pub struct User {
     pub is_admin: bool
 }
 
+#[derive(Debug, Serialize, Deserialize)]
+pub struct UserWithoutPassword {
+    #[serde(rename = "_id")]
+    pub id: Option<String>,
+    #[serde(rename = "_key")]
+    pub key: Option<String>,
+    pub username: String,
+    pub email: String,
+    pub is_admin: bool
+}
+
 impl User {
-    pub fn new(id: i64) -> Self {
+    pub fn new() -> Self {
         Self {
-            id,
+            id: None,
+            key: None,
             username: String::new(),
             email: String::new(),
             password: String::new(),
@@ -58,31 +41,14 @@ impl User {
     }
 }
 
-impl Model for User {
-    fn into_row(self) -> Vec<DataType> {
-        vec![
-            self.id.into(),
-            self.username.into(),
-            self.email.into(),
-            self.password.into(),
-            self.password_salt.into(),
-            DataType::UnsignedInt(self.is_admin as u32)
-        ]
-    }
-
-    fn from_row(row: &[DataType]) -> Result<Self, ()> {
-        if 6 != row.len() {
-            return Err(());
+impl From<User> for UserWithoutPassword {
+    fn from(user: User) -> Self {
+        Self {
+            id: user.id,
+            key: user.key,
+            username: user.username,
+            email: user.email,
+            is_admin: user.is_admin
         }
-        Ok(
-            Self {
-                id: get_i64!(&row[0]),
-                username: get_string!(&row[1]),
-                email: get_string!(&row[2]),
-                password: get_string!(&row[3]),
-                password_salt: get_string!(&row[4]),
-                is_admin: get_bool!(&row[5]),
-            }
-        )
     }
 }

@@ -1,10 +1,11 @@
 pub mod user;
 
-use noria::{
-    DataType
-};
+pub mod app;
 
-pub trait Model: Sized {
-    fn from_row(row: &[DataType]) -> Result<Self, ()>;
-    fn into_row(self) -> Vec<DataType>;
-}
+pub mod permission;
+
+pub mod bucket;
+
+pub mod proxy;
+
+pub mod cms;

@@ -1,24 +1,26 @@
 use std::{
-    fmt::{
-        Result as FmtResult,
-        Formatter,
-        Display
-    },
-    error::Error as StdError,
     result::Result as StdResult,
+    error::Error as StdError,
+    fmt::{
+        Display,
+        Formatter,
+        Result as FmtResult,
+    },
     marker::{
         Send,
         Sync
     }
 };
 
+pub type Result<T> = StdResult<T, Error>;
+
 #[derive(Debug)]
 pub enum Error {
     Unknown,
-    CouldntConnect
+    CouldntConnect,
+    CouldntGetDatabase,
+    Custom(Box<dyn StdError>)
 }
-
-pub type Result<T> = StdResult<T, Error>;
 
 impl Display for Error {
     fn fmt(&self, f: &mut Formatter<'_>) -> FmtResult {
@@ -26,7 +28,7 @@ impl Display for Error {
     }
 }
 
-impl StdError for Error  {}
+impl StdError for Error {}
 
 unsafe impl Send for Error {}
 unsafe impl Sync for Error {}

@@ -1,4 +1,8 @@
 use actix_web::{
+    get,
+    put,
+    post,
+    delete,
     web::{
         HttpRequest,
         HttpResponse,
@@ -7,6 +11,11 @@ use actix_web::{
         StatusCode
     }
 };
+
+#[put("/users")]
+pub async fn login_action(request: HttpRequest) -> HttpResponse {
+    HttpResponse::Ok().body("Not implemented")
+}
 
 pub async fn list_action(request: HttpRequest) -> HttpResponse {
     HttpResponse::build(StatusCode::OK)
