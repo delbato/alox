@@ -16,7 +16,7 @@ pub struct User {
     pub is_admin: bool
 }
 
-#[derive(Debug, Serialize, Deserialize)]
+#[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct UserWithoutPassword {
     #[serde(rename = "_id")]
     pub id: Option<String>,

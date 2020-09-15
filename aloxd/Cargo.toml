@@ -8,3 +8,10 @@ edition = "2018"
 
 [dependencies]
 alox = { path = "../alox" }
+
+[dev-dependencies.tokio]
+version = "0.2.22"
+features = [
+    "rt-threaded",
+    "macros"
+]

@@ -2,6 +2,8 @@ pub mod cms;
 
 pub mod proxy;
 
+pub mod app;
+
 use std::{
     path::PathBuf
 };

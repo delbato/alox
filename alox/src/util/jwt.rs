@@ -50,6 +50,7 @@ pub struct UserClaims {
     pub username: String,
 }
 
+#[derive(Clone)]
 pub struct JwtManager {
     encoding_key: EncodingKey,
     secret: String

@@ -5,6 +5,13 @@ use error::{
     Error
 };
 
+use std::{
+    sync::{
+        Arc,
+        RwLock
+    }
+};
+
 use arangors::{
     Connection,
     Database,
@@ -14,8 +21,9 @@ use arangors::{
     }
 };
 
+#[derive(Clone)]
 pub struct ArangoConnection {
-    handle: Connection
+    handle: Arc<RwLock<Connection>>
 }
 
 impl ArangoConnection {
@@ -27,12 +35,14 @@ impl ArangoConnection {
                 Error::CouldntConnect
             })?;
         Ok(Self{
-            handle
+            handle: Arc::new(RwLock::new(handle))
         })
     }
 
     pub async fn get_db(&self, db_name: &str) -> Result<Database<ReqwestClient>> {
-        self.handle.db(db_name).await
+        let handle = self.handle.read()
+            .map_err(|_| Error::Unknown)?;
+        handle.db(db_name).await
             .map_err(|_| Error::CouldntGetDatabase)
     }
 }
