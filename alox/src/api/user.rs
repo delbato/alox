@@ -1,12 +1,17 @@
 use crate::{
     api::{
-        response::ApiResponse
+        response::ApiResponse,
+        error::{
+            ApiResult,
+            ApiError,
+            ApiErrorType,
+        }
     },
     model::{
         user::User
     },
-    db::{
-        ArangoConnection
+    repo::{
+        user::UserRepo
     },
     util::{
         jwt::{
@@ -23,6 +28,9 @@ use std::{
     sync::Arc
 };
 
+use serde::{
+    Deserialize
+};
 use serde_json::{
     Value,
     json
@@ -36,90 +44,92 @@ use actix_web::{
         HttpRequest,
         HttpResponse,
         Json,
-        Data
+        Data,
+        Path
     },
     http::{
         StatusCode
     }
 };
 
+#[derive(Deserialize)]
+struct LoginBody {
+    pub username: String,
+    pub password: String
+}
+
 #[post("/users/login")]
-pub async fn login_action(_req: HttpRequest, user_login: Json<Value>, arango: Data<ArangoConnection>, jwt: Data<JwtManager>) -> ApiResponse<String> {
-    let username = user_login.get("username").unwrap()
-        .as_str()
-        .unwrap();
-    let password = user_login.get("password").unwrap()
-        .as_str()
-        .unwrap();
-    let alox_db = arango.get_db("alox").await.unwrap();
-    let aql = format!("
-        FOR u IN users
-            FILTER u.username == \"{}\"
-            RETURN u
-    ", username);
-    let user: User = alox_db.aql_str(&aql).await
-        .unwrap()
-        .remove(0);
-    let password_salted = format!("{}{}", password, user.password_salt);
-    let password_hashed = generate_hash(&password_salted);
+pub async fn login_action(login_body: Json<LoginBody>, user_repo: UserRepo, jwt: Data<JwtManager>) -> ApiResult<Value> {
+    let user = user_repo.find_by_username(&login_body.username).await
+        .map_err(|_| ApiError::new_msg(
+            404,
+            "User not found"
+        ))?;
     
-    return if user.password != password_hashed {
-        ApiResponse::new(false, String::from("Invalid credentials"))
-    } else {
-        let jwt_claims = JwtClaims::from(user);
-        let jwt_token = jwt.generate_token(jwt_claims);
-        ApiResponse::new(true, jwt_token)
-    };
+    if !user.verify_password(&login_body.password) {
+        return Err(ApiError::new_msg(
+            401,
+            "Unauthorized"
+        ));
+    }
+
+    let jwt_claims = JwtClaims::from(user);
+    let token = jwt.generate_token(jwt_claims);
+    
+    Ok(ApiResponse::new(true, json!({
+        "message": "Logged in successfully",
+        "token": token
+    })))
+}
+
+#[derive(Deserialize)]
+struct RegisterBody {
+    pub username: String,
+    pub password: String,
+    pub email: String
 }
 
 #[post("/users")]
-pub async fn register_action(user_registration: Json<Value>, arango: Data<ArangoConnection>) -> ApiResponse<String> {
-    let username = user_registration.get("username").unwrap()
-        .as_str()
-        .unwrap()
-        .to_string();
-    let password_raw = user_registration.get("password").unwrap()
-        .as_str()
-        .unwrap()
-        .to_string();
-    let email = user_registration.get("email").unwrap()
-        .as_str()
-        .unwrap()
-        .to_string();
+pub async fn register_action(register_body: Json<RegisterBody>, user_repo: UserRepo) -> ApiResult<String> {
+    let user_exists = user_repo.find_by_username(&register_body.username).await
+        .is_ok();
+    if user_exists {
+        return Err(ApiError::new_msg(
+            400,
+            "User already exists"
+        ));
+    }
+
     let password_salt = generate_salt(16);
-    let password_salted = format!("{}{}", password_raw, password_salt);
-    let password = generate_hash(&password_salted);
+    let password_salted = format!("{}{}", register_body.password, password_salt);
+    let password_hashed = generate_hash(&password_salted);
 
-    let user_value = json!({
-        "username": username,
-        "password": password,
-        "password_salt": password_salt,
-        "email": email,
-        "is_admin": false
-    });
-
-    let mut bind_vars = HashMap::new();
-    bind_vars.insert("user", user_value);
-
-    let alox_db = arango.get_db("alox").await.unwrap();
-
-    let insert_res: Vec<Value> = alox_db.aql_bind_vars("INSERT @user INTO users LET result = NEW RETURN result", bind_vars)
-        .await
-        .unwrap();
-        
-    return if insert_res.len() != 1 {
-        ApiResponse::new(false, format!("Failed to register this user"))
-    } else {
-        ApiResponse::new(true, format!("User successfully registered"))
+    let mut user = User {
+        id: None,
+        key: None,
+        password: password_hashed,
+        password_salt,
+        email: register_body.email.clone(),
+        username: register_body.username.clone(),
+        is_admin: false
     };
+
+    user_repo.insert(user).await
+        .map_err(|_| ApiError::new_msg(
+            500,
+            "Couldnt register user"
+        ))?;
+
+    Ok(ApiResponse::new(
+        true,
+        String::from("User successfully registered!")
+    ))
 }
 
-pub async fn list_action(_req: HttpRequest) -> HttpResponse {
-    HttpResponse::build(StatusCode::OK)
-        .content_type("application/json")
-        .body("
-            {
-                \"success\":true
-            }
-        ")
+#[put("/users/{user_id}")]
+pub async fn edit_action(user_id: Path<u32>) -> ApiResult<String> {
+    Err(ApiError::new_msg(
+        501,
+        "Not implemented"
+    ))
 }

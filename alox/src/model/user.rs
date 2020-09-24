@@ -1,3 +1,9 @@
+use crate::{
+    util::{
+        generate_hash
+    }
+};
+
 use serde::{
     Serialize,
     Deserialize
@@ -38,6 +44,12 @@ impl User {
             password_salt: String::new(),
             is_admin: false,
         }
+    }
+
+    pub fn verify_password(&self, password: &str) -> bool {
+        let password_salted = format!("{}{}", password, self.password_salt);
+        let password_hashed = generate_hash(&password_salted);
+        self.password == password_hashed
     }
 }
 

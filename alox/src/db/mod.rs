@@ -1,48 +1,67 @@
 pub mod error;
 
-use error::{
-    Result,
-    Error
+use error::Error;
+
+use arangors::Connection;
+use bb8::{
+    Pool,
+    ManageConnection,
+    PooledConnection
 };
 
-use std::{
-    sync::{
-        Arc,
-        RwLock
-    }
-};
+pub type ArangoPool = Pool<ArangoConnectionManager>;
 
-use arangors::{
-    Connection,
-    Database,
-    Collection,
-    client::{
-        reqwest::ReqwestClient
-    }
-};
+pub type ArangoConnection<'c> = PooledConnection<'c, ArangoConnectionManager>;
 
-#[derive(Clone)]
-pub struct ArangoConnection {
-    handle: Arc<RwLock<Connection>>
+pub struct ArangoConnectionManager {
+    username: String,
+    password: String,
+    url: String
 }
 
-impl ArangoConnection {
-    pub async fn new(url: &str, username: &str, password: &str) -> Result<Self> {
-        let handle = Connection::establish_jwt(url, username, password)
+impl ArangoConnectionManager {
+    pub fn new<S: Into<String>>(
+        url: S,
+        username: S,
+        password: S
+    ) -> Self {
+        Self {
+            url: url.into(),
+            username: username.into(),
+            password: password.into()
+        }
+    }
+}
+
+#[async_trait::async_trait]
+impl ManageConnection for ArangoConnectionManager {
+    type Connection = Connection;
+    type Error = Error;
+
+    async fn connect(&self) -> Result<Self::Connection, Self::Error> {
+        Connection::establish_basic_auth(&self.url, &self.username, &self.password)
             .await
-            .map_err(|e| {
-                println!("Error! {:#?}", e);
-                Error::CouldntConnect
-            })?;
-        Ok(Self{
-            handle: Arc::new(RwLock::new(handle))
-        })
+            .map_err(|_| Error::CouldntConnect)
     }
 
-    pub async fn get_db(&self, db_name: &str) -> Result<Database<ReqwestClient>> {
-        let handle = self.handle.read()
-            .map_err(|_| Error::Unknown)?;
-        handle.db(db_name).await
-            .map_err(|_| Error::CouldntGetDatabase)
+    async fn is_valid(&self, conn: Self::Connection) -> Result<Self::Connection, Self::Error> {
+        Ok(conn)
     }
+
+    fn has_broken(&self, _conn: &mut Self::Connection) -> bool {
+        false
+    }
+}
+
+pub async fn get_connection_pool<S: Into<String>>(
+    url: S,
+    username: S,
+    password: S,
+    size: u32
+) -> Result<ArangoPool, Error> {
+    let manager = ArangoConnectionManager::new(url, username, password);
+    Pool::builder()
+        .max_size(size)
+        .build(manager)
+        .await
 }
