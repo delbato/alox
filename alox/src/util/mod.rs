@@ -13,12 +13,13 @@ use hex::encode_upper;
 
 pub fn generate_salt(length: usize) -> String {
     let mut rng = thread_rng();
-    let mut ret = String::new();
-    for i in 0..length {
-        let hex_val = rng.gen_range(0, 15) as u16;
-        ret += &format!("{:X}", hex_val);
+    let mut bytes = vec![];
+    let mut i = 0;
+    while i < length {
+        bytes.push(rng.gen());
+        i += 2;
     }
-    ret
+    encode_upper(&bytes)
 }
 
 pub fn generate_hash(input: &str) -> String {

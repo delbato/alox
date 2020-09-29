@@ -2,7 +2,9 @@ use serde::{
     Serialize
 };
 use serde_json::{
-    to_string
+    to_string,
+    to_value,
+    Value
 };
 use std::{
     future::Future
@@ -19,22 +21,22 @@ use actix_web::{
 ///
 /// Intended for use with JSON Responses
 #[derive(Debug, Serialize)]
-pub struct ApiResponse<T: Serialize> {
+pub struct ApiResponse {
     pub success: bool,
-    pub payload: T
+    pub payload: Value
 }
 
 
-impl<T: Serialize> ApiResponse<T> {
-    pub fn new(success: bool, payload: T) -> Self {
+impl ApiResponse {
+    pub fn new<T: Serialize>(success: bool, payload: T) -> Self {
         Self {
             success,
-            payload
+            payload: to_value(&payload).unwrap()
         }
     }
 }
 
-impl<T: Serialize> Responder for ApiResponse<T> {
+impl Responder for ApiResponse {
     type Error = Error;
     type Future = HttpResponse;
 

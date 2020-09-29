@@ -73,7 +73,7 @@ impl JwtManager {
     pub fn validate_token(&self, token: &str) -> Option<JwtClaims> {
         let validation = Validation::default();
         let decoding_key = DecodingKey::from_secret(self.secret.as_bytes());
-        let token_data =decode::<JwtClaims>(token, &decoding_key, &validation)
+        let token_data = decode::<JwtClaims>(token, &decoding_key, &validation)
             .ok()?;
         Some(token_data.claims)
     }

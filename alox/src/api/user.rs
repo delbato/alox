@@ -3,6 +3,7 @@ use crate::{
         response::ApiResponse,
         error::{
             ApiResult,
+            ApiResultExt,
             ApiError,
             ApiErrorType,
         }
@@ -59,27 +60,21 @@ struct LoginBody {
 }
 
 #[post("/users/login")]
-pub async fn login_action(login_body: Json<LoginBody>, user_repo: UserRepo, jwt: Data<JwtManager>) -> ApiResult<Value> {
+pub async fn login_action(login_body: Json<LoginBody>, user_repo: UserRepo, jwt: Data<JwtManager>) -> ApiResult {
     let user = user_repo.find_by_username(&login_body.username).await
-        .map_err(|_| ApiError::new_msg(
-            404,
-            "User not found"
-        ))?;
+        .map_err(|_| ApiResult::error(404, "User not found!").unwrap_err())?;
     
     if !user.verify_password(&login_body.password) {
-        return Err(ApiError::new_msg(
-            401,
-            "Unauthorized"
-        ));
+        return ApiResult::error(401, "Incorrect password or username");
     }
 
     let jwt_claims = JwtClaims::from(user);
     let token = jwt.generate_token(jwt_claims);
     
-    Ok(ApiResponse::new(true, json!({
-        "message": "Logged in successfully",
+    ApiResult::success(json!({
+        "message": "Login successful!",
         "token": token
-    })))
+    }))
 }
 
 #[derive(Deserialize)]
@@ -90,21 +85,18 @@ struct RegisterBody {
 }
 
 #[post("/users")]
-pub async fn register_action(register_body: Json<RegisterBody>, user_repo: UserRepo) -> ApiResult<String> {
+pub async fn register_action(register_body: Json<RegisterBody>, user_repo: UserRepo) -> ApiResult {
     let user_exists = user_repo.find_by_username(&register_body.username).await
         .is_ok();
     if user_exists {
-        return Err(ApiError::new_msg(
-            400,
-            "User already exists"
-        ));
+        return ApiResult::error(400, "Username taken");
     }
 
     let password_salt = generate_salt(16);
     let password_salted = format!("{}{}", register_body.password, password_salt);
     let password_hashed = generate_hash(&password_salted);
 
-    let mut user = User {
+    let user = User {
         id: None,
         key: None,
         password: password_hashed,
@@ -115,19 +107,13 @@ pub async fn register_action(register_body: Json<RegisterBody>, user_repo: UserR
     };
 
     user_repo.insert(user).await
-        .map_err(|_| ApiError::new_msg(
-            500,
-            "Couldnt register user"
-        ))?;
+        .map_err(|_| ApiResult::error(500, "Couldnt insert user into DB").unwrap_err())?;
 
-    Ok(ApiResponse::new(
-        true,
-        String::from("User successfully registered!")
-    ))
+    ApiResult::success("User successfuly registered")
 }
 
 #[put("/users/{user_id}")]
-pub async fn edit_action(user_id: Path<u32>) -> ApiResult<String> {
+pub async fn edit_action(user_id: Path<u32>) -> ApiResult {
     Err(ApiError::new_msg(
         501,
         "Not implemented"

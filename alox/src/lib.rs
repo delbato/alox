@@ -11,6 +11,7 @@ pub extern crate chrono;
 extern crate rand;
 extern crate hex;
 extern crate blake2;
+pub extern crate log;
 
 pub extern crate serde;
 pub extern crate serde_json;

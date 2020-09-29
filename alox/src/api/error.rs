@@ -19,20 +19,45 @@ use std::{
 };
 
 use serde::Serialize;
-use serde_json::to_string;
+use serde_json::{
+    to_string,
+    Value,
+    json,
+    to_value
+};
 use actix_web::{
     ResponseError,
     Responder,
     HttpResponse,
     http::{
         StatusCode
-    }
+    },
+    Error as ActixError
 };
 use arangors::{
     ClientError
 };
 
-pub type ApiResult<T> = Result<ApiResponse<T>, ApiError>;
+pub type ApiResult = Result<ApiResponse, ApiError>;
+
+pub trait ApiResultExt<T: Serialize> {
+    fn error(status_code: u16, payload: T) -> Self;
+    fn success(payload: T) -> Self;
+}
+
+impl<T: Serialize> ApiResultExt<T> for ApiResult {
+    fn error(status_code: u16, payload: T) -> Self {
+        Err(
+            ApiError::new_payload(status_code, payload)
+        )
+    }
+
+    fn success(payload: T) -> Self {
+        Ok(
+            ApiResponse::new(true, payload)
+        )
+    }
+}
 
 #[derive(Debug)]
 pub struct ApiError {
@@ -61,6 +86,13 @@ impl ApiError {
         }
     }
 
+    pub fn new_payload<T: Serialize>(status_code: u16, payload: T) -> Self {
+        Self {
+            status_code,
+            error_type: ApiErrorType::Payload(to_value(&payload).unwrap())
+        }
+    }
+
     pub fn new_msg<M: Into<String>>(status_code: u16, message: M) -> Self {
         Self {
             status_code,
@@ -76,7 +108,8 @@ pub enum ApiErrorType {
     NotFound,
     NotAuthorized,
     InvalidRequest,
-    Message(String)
+    Message(String),
+    Payload(Value)
 }
 
 impl Display for ApiError {
@@ -115,9 +148,21 @@ impl ResponseError for ApiError {
             false,
             format!("ERROR! {:#?}", self)
         );
-        let body = to_string(&api_response).unwrap();
-        HttpResponse::build(self.status_code())
-            .content_type("application/json")
-            .body(body)
+        match &self.error_type {
+            ApiErrorType::Payload(json_value) => {
+                HttpResponse::build(self.status_code())
+                    .content_type("application/json")
+                    .body(json!({
+                        "success": false,
+                        "payload": json_value
+                    }))
+            },
+            _ => {
+                let body = to_string(&api_response).unwrap();
+                HttpResponse::build(self.status_code())
+                    .content_type("application/json")
+                    .body(body)
+            }
+        }
     }
 }

@@ -9,9 +9,13 @@ edition = "2018"
 [dependencies]
 alox = { path = "../alox" }
 
-[dev-dependencies.tokio]
-version = "0.2.22"
-features = [
-    "rt-threaded",
-    "macros"
-]
+[dev-dependencies]
+
+    [dev-dependencies.tokio]
+    version = "0.2.22"
+    features = [
+        "rt-threaded",
+        "macros"
+    ]
+    [dev-dependencies.env_logger]
+    version = "0.7.1"
