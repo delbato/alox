@@ -9,9 +9,11 @@ extern crate jsonwebtoken as jwt;
 
 pub extern crate chrono;
 extern crate rand;
-extern crate hex;
+extern crate base64;
 extern crate blake2;
 pub extern crate log;
+pub extern crate maplit;
+extern crate multimap;
 
 pub extern crate serde;
 pub extern crate serde_json;
@@ -41,4 +43,4 @@ pub mod util;
 
 pub mod repo;
 
-pub mod mdw;
+pub mod middleware;

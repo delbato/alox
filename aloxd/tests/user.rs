@@ -31,7 +31,11 @@ use alox::{
         middleware::Logger
     },
     actix_rt,
-    mdw
+    middleware::jwt::Jwt,
+    maplit::{
+        hashmap,
+        hashset
+    }
 };
 
 type Result<T> = StdResult<T, Box<dyn Error>>;
@@ -49,10 +53,14 @@ async fn test_user_auth() -> Result<()> {
             .data(jwt_manager)
             .data(arango_pool)
             .wrap(Logger::default())
-            .wrap(mdw::jwt::Jwt::with_exclude(&[
-                "/alox-api/users/login"
-            ]))
             .service(web::scope("/alox-api")
+                .wrap(Jwt::default()
+                    .with_exclude(hashmap!{
+                        "/users/login" => vec![ "POST" ],
+                        "/users" => vec![ "POST" ]
+                    })
+                    .with_require_admin(true)
+                )
                 .service(user::login_action)
                 .service(user::register_action)
             )

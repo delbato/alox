@@ -24,6 +24,13 @@ use chrono::{
     Utc,
     Duration
 };
+use actix_web::{
+    FromRequest,
+    HttpRequest,
+    dev::Payload,
+    web::Data
+};
+use futures::Future;
 
 #[derive(Debug, Serialize, Deserialize)]
 pub struct JwtClaims {
@@ -41,6 +48,26 @@ impl From<User> for JwtClaims {
             aud: String::from("alox"),
             exp: exp.timestamp() as usize,
             user: user.into()
+        }
+    }
+}
+
+impl FromRequest for JwtClaims {
+    type Error = ();
+    type Config = ();
+    type Future = impl Future<Output = Result<Self, Self::Error>>;
+
+    fn from_request(req: &HttpRequest, _: &mut Payload) -> Self::Future {
+        let jwt_manager = req.app_data::<Data<JwtManager>>()
+            .cloned()
+            .unwrap();
+        let auth_header = req.headers().get("Authorization").unwrap();
+        let auth_string = auth_header.to_str().unwrap();
+        let auth_split: Vec<&str> = auth_string.split(" ").collect();
+        let token = String::from(auth_split[1]);
+        async move {
+            jwt_manager.validate_token(&token)
+                .ok_or(())
         }
     }
 }

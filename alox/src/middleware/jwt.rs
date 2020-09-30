@@ -16,9 +16,15 @@ use crate::{
 
 use std::{
     pin::Pin,
-    collections::HashSet,
+    collections::{
+        HashMap,
+        HashSet
+    },
     task::{Context, Poll},
-    iter::FromIterator
+    iter::FromIterator,
+    borrow::Borrow,
+    cmp::Eq,
+    hash::Hash
 };
 
 use actix_service::{Service, Transform};
@@ -39,22 +45,42 @@ use serde_json::{
 use log::error;
 
 pub struct Jwt {
-    excluded_paths: HashSet<String>
+    excluded_paths: HashMap<String, HashSet<String>>,
+    require_admin: bool
 }
 
 impl Jwt {
-    pub fn with_exclude(excluded_paths: &[&str]) -> Self {
-        let excluded_paths = HashSet::from_iter(excluded_paths.iter().map(|s| String::from(*s)));
-        Self {
-            excluded_paths
+    pub fn with_exclude<S>(mut self, paths: HashMap<S, Vec<S>>) -> Self
+    where S: Into<String> {
+        for (path, path_methods) in paths.into_iter() {
+            let path = path.into();
+            let path_methods: HashSet<String> = path_methods.into_iter().map(|item| item.into()).collect();
+
+            if let Some(methods) = self.excluded_paths.get_mut(&path) {
+                methods.extend(path_methods.into_iter().map(|item| item.into()));
+            } else {
+                let path_methods_iter = path_methods.into_iter().map(|item| item.into());
+                let mut path_methods = HashSet::new();
+                for methods in path_methods_iter {
+                    path_methods.insert(methods);
+                }
+                self.excluded_paths.insert(path.into(), path_methods);
+            }
         }
+        self
+    }
+
+    pub fn with_require_admin(mut self, require_admin: bool) -> Self {
+        self.require_admin = require_admin;
+        self
     }
 }
 
 impl Default for Jwt {
     fn default() -> Self {
         Self {
-            excluded_paths: HashSet::new()
+            excluded_paths: HashMap::new(),
+            require_admin: false
         }
     }
 }
@@ -74,9 +100,14 @@ where
 
     fn new_transform(&self, service: S) -> Self::Future {
         let excluded_paths = self.excluded_paths.clone();
+        let require_admin = self.require_admin;
         async move {
             Ok(
-                JwtMiddleware { service, excluded_paths }
+                JwtMiddleware { 
+                    service, 
+                    excluded_paths, 
+                    require_admin
+                }
             )
         }
     }
@@ -84,12 +115,30 @@ where
 
 pub struct JwtMiddleware<S> {
     service: S,
-    excluded_paths: HashSet<String>
+    require_admin: bool,
+    excluded_paths: HashMap<String, HashSet<String>>
 }
 
-impl<B: 'static, S: Service<Request = ServiceRequest, Response = ServiceResponse<B>, Error = Error>> JwtMiddleware<S> {
+impl<S> JwtMiddleware<S> {
+    fn check_exclusion(&self, req: &ServiceRequest) -> bool {
+        let method = req.method().as_str();
+        error!("Method: {}", method);
+        let path = req.path();
+        for (exc_path, methods) in self.excluded_paths.iter() {
+            if !path.contains(exc_path) {
+                continue;
+            }
+            if methods.contains(method) {
+                return true
+            } else {
+                return false
+            }
+        }
+        false
+    }
+
     fn run(&self, req: &mut ServiceRequest) -> ApiResult {
-        if self.excluded_paths.contains(req.path()) {
+        if self.check_exclusion(req) {
             return ApiResult::success(());
         }
         let header_auth_opt = req.headers().get("Authorization");
@@ -107,8 +156,11 @@ impl<B: 'static, S: Service<Request = ServiceRequest, Response = ServiceResponse
         }
         let jwt_token = auth_split[1];
         let jwt_manager = req.app_data::<Data<JwtManager>>().cloned().unwrap();
-        let _jwt_claims = jwt_manager.validate_token(jwt_token)
+        let jwt_claims = jwt_manager.validate_token(jwt_token)
             .ok_or(ApiResult::error(401, "Invalid JWT").unwrap_err())?;
+        if self.require_admin && !jwt_claims.user.is_admin {
+            return ApiResult::error(401, "Not an administrator");
+        }
         ApiResult::success(())
     }
 }

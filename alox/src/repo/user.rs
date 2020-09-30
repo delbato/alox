@@ -46,6 +46,21 @@ impl UserRepo {
         }
     }
 
+    pub async fn find(&self, user_key: &str) -> Result<User, ()> {
+        let mut result_vec: Vec<User> = self.database.aql_bind_vars("
+            RETURN DOCUMENT(\"users/@key\")
+        ", hashmap!{
+            "key" => user_key.into()
+        }).await
+            .map_err(|_| ())?;
+        if result_vec.len() != 1 {
+            Err(())
+        } else {
+            result_vec.pop()
+                .ok_or(())
+        }
+    }
+
     pub async fn find_by_username(&self, username: &str) -> Result<User, ()> {
         println!("Attempting to find by username...");
         let mut result_vec: Vec<User> = self.database.aql_bind_vars("

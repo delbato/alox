@@ -436,15 +436,16 @@ dependencies = [
  "actix-web-httpauth",
  "arangors",
  "async-trait",
+ "base64 0.12.3",
  "bb8",
  "blake2",
  "chrono",
  "futures",
  "futures-util",
- "hex",
  "jsonwebtoken",
  "log",
  "maplit",
+ "multimap",
  "rand",
  "serde",
  "serde_json",
@@ -1129,12 +1130,6 @@ dependencies = [
 ]
 
 [[package]]
-name = "hex"
-version = "0.4.2"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "644f9158b2f133fd50f5fb3242878846d9eb792e445c893805ff0e3824006e35"
-
-[[package]]
 name = "hostname"
 version = "0.3.1"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -1462,6 +1457,15 @@ dependencies = [
  "net2",
  "winapi 0.2.8",
  "ws2_32-sys",
+]
+
+[[package]]
+name = "multimap"
+version = "0.8.2"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "1255076139a83bb467426e7f8d0134968a8118844faa755985e077cf31850333"
+dependencies = [
+ "serde",
 ]
 
 [[package]]

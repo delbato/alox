@@ -92,7 +92,7 @@ pub async fn register_action(register_body: Json<RegisterBody>, user_repo: UserR
         return ApiResult::error(400, "Username taken");
     }
 
-    let password_salt = generate_salt(16);
+    let password_salt = generate_salt(32);
     let password_salted = format!("{}{}", register_body.password, password_salt);
     let password_hashed = generate_hash(&password_salted);
 
@@ -113,9 +113,20 @@ pub async fn register_action(register_body: Json<RegisterBody>, user_repo: UserR
 }
 
 #[put("/users/{user_id}")]
-pub async fn edit_action(user_id: Path<u32>) -> ApiResult {
+pub async fn edit_action(user_id: Path<String>) -> ApiResult {
     Err(ApiError::new_msg(
         501,
         "Not implemented"
     ))
+}
+
+#[get("/users/{user_id}")]
+pub async fn get_action(user_id: Path<String>, jwt_claims: JwtClaims, user_repo: UserRepo) -> ApiResult {
+    let user_key = jwt_claims.user.key.unwrap();
+    if user_key != *user_id && !jwt_claims.user.is_admin {
+        return ApiResult::error(401, "Unauthorized");
+    }
+    let user = user_repo.find(&*user_id).await
+        .map_err(|_| ApiResult::error(404, "User not found").unwrap_err())?;
+    ApiResult::success(user)
 }
