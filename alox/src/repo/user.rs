@@ -14,6 +14,7 @@ use std::{
     ops::Deref
 };
 
+use log::error;
 use serde_json::{
     Value,
     json,
@@ -48,11 +49,14 @@ impl UserRepo {
 
     pub async fn find(&self, user_key: &str) -> Result<User, ()> {
         let mut result_vec: Vec<User> = self.database.aql_bind_vars("
-            RETURN DOCUMENT(\"users/@key\")
+            RETURN DOCUMENT(CONCAT(\"users/\", @key))
         ", hashmap!{
             "key" => user_key.into()
         }).await
-            .map_err(|_| ())?;
+            .map_err(|err| {
+                error!("AQL Error: {:#?}", err);
+                ()
+            })?;
         if result_vec.len() != 1 {
             Err(())
         } else {
@@ -87,22 +91,32 @@ impl UserRepo {
 
     pub async fn insert(&self, user: User) -> Result<User, ()> {
         let mut result_vec: Vec<User> = self.database.aql_bind_vars("
-            INSERT {
-                username: @username,
-                email: @email,
-                password: @password,
-                password_salt: @password_salt,
-                is_admin: @is_admin
-            } INTO users
+            INSERT @user INTO users
             RETURN NEW
         ", hashmap!{
-            "username" => user.username.into(),
-            "password" => user.password.into(),
-            "password_salt" => user.password_salt.into(),
-            "email" => user.email.into(),
-            "is_admin" => user.is_admin.into()
+            "user" => json!(user)
         }).await
             .map_err(|_| ())?;
+        if result_vec.len() != 1 {
+            return Err(());
+        }
+        result_vec.pop()
+            .ok_or(())
+    }
+
+    pub async fn update(&self, user: User) -> Result<User, ()> {
+        let mut result_vec: Vec<User> = self.database.aql_bind_vars("
+            LET doc = DOCUMENT(CONCAT(\"users/\", @user._key))
+            UPDATE doc WITH @user IN users
+            RETURN NEW
+        ", hashmap! {
+            "user" => json!(user)
+        }).await
+            .map_err(|err| {
+                error!("AQL Error: {:#?}", err);
+                ()
+            })?;
+        
         if result_vec.len() != 1 {
             return Err(());
         }

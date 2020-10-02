@@ -11,8 +11,6 @@ use serde::{
 
 #[derive(Debug, Serialize, Deserialize)]
 pub struct User {
-    #[serde(rename = "_id")]
-    pub id: Option<String>,
     #[serde(rename = "_key")]
     pub key: Option<String>,
     pub username: String,
@@ -24,8 +22,6 @@ pub struct User {
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct UserWithoutPassword {
-    #[serde(rename = "_id")]
-    pub id: Option<String>,
     #[serde(rename = "_key")]
     pub key: Option<String>,
     pub username: String,
@@ -36,7 +32,6 @@ pub struct UserWithoutPassword {
 impl User {
     pub fn new() -> Self {
         Self {
-            id: None,
             key: None,
             username: String::new(),
             email: String::new(),
@@ -56,7 +51,6 @@ impl User {
 impl From<User> for UserWithoutPassword {
     fn from(user: User) -> Self {
         Self {
-            id: user.id,
             key: user.key,
             username: user.username,
             email: user.email,

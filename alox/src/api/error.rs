@@ -138,6 +138,12 @@ impl From<ClientError> for ApiError {
     }
 }
 
+impl From<()> for ApiError {
+    fn from(_: ()) -> Self {
+        Self::new(500, ApiErrorType::Unknown)
+    }
+}
+
 impl ResponseError for ApiError {
     fn status_code(&self) -> StatusCode {
         StatusCode::from_u16(self.status_code).expect("Unknown status code!")

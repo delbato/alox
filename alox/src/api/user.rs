@@ -54,7 +54,7 @@ use actix_web::{
 };
 
 #[derive(Deserialize)]
-struct LoginBody {
+pub struct LoginBody {
     pub username: String,
     pub password: String
 }
@@ -78,7 +78,7 @@ pub async fn login_action(login_body: Json<LoginBody>, user_repo: UserRepo, jwt:
 }
 
 #[derive(Deserialize)]
-struct RegisterBody {
+pub struct RegisterBody {
     pub username: String,
     pub password: String,
     pub email: String
@@ -97,7 +97,6 @@ pub async fn register_action(register_body: Json<RegisterBody>, user_repo: UserR
     let password_hashed = generate_hash(&password_salted);
 
     let user = User {
-        id: None,
         key: None,
         password: password_hashed,
         password_salt,
@@ -112,21 +111,68 @@ pub async fn register_action(register_body: Json<RegisterBody>, user_repo: UserR
     ApiResult::success("User successfuly registered")
 }
 
-#[put("/users/{user_id}")]
-pub async fn edit_action(user_id: Path<String>) -> ApiResult {
-    Err(ApiError::new_msg(
-        501,
-        "Not implemented"
-    ))
+#[derive(Deserialize)]
+pub struct EditBody {
+    username: Option<String>,
+    password: Option<String>,
+    password_old: Option<String>,
+    email: Option<String>,
+    is_admin: Option<bool>
 }
 
-#[get("/users/{user_id}")]
-pub async fn get_action(user_id: Path<String>, jwt_claims: JwtClaims, user_repo: UserRepo) -> ApiResult {
-    let user_key = jwt_claims.user.key.unwrap();
-    if user_key != *user_id && !jwt_claims.user.is_admin {
-        return ApiResult::error(401, "Unauthorized");
+#[put("/users/{user_key}")]
+pub async fn edit_action(edit_body: Json<EditBody>, user_key: Path<String>, jwt_claims: JwtClaims, user_repo: UserRepo) -> ApiResult {
+    if &*user_key != jwt_claims.user.key.as_ref().unwrap() && !jwt_claims.user.is_admin {
+        return ApiResult::error(403, "Not authorized to do this");
     }
-    let user = user_repo.find(&*user_id).await
-        .map_err(|_| ApiResult::error(404, "User not found").unwrap_err())?;
+
+    let mut user = user_repo.find(&*user_key).await?;
+
+    if let Some(username) = edit_body.username.as_ref().cloned() {
+        user.username = username;
+    }
+
+    if edit_body.password.is_some() && edit_body.password_old.is_some() {
+        let password = edit_body.password.as_ref()
+            .cloned()
+            .unwrap();
+        let password_old = edit_body.password_old.as_ref()
+            .cloned()
+            .unwrap();
+        let password_old_salted = format!("{}{}", password_old, user.password_salt);
+        let password_old_hashed = generate_hash(&password_old_salted);
+        if user.password != password_old_hashed {
+            return ApiResult::error(400, "Passwords do not match");
+        }
+        let salt = generate_salt(16);
+        let password_new_salted = format!("{}{}", salt, password);
+        let password_new_hashed = generate_hash(&password_new_salted);
+        user.password = password_new_hashed;
+        user.password_salt = salt;
+    }
+
+    if let Some(email) = edit_body.email.as_ref().cloned() {
+        user.email = email;
+    }
+
+    if edit_body.is_admin.is_some() && jwt_claims.user.is_admin {
+        let is_admin = edit_body.is_admin.unwrap();
+        user.is_admin = is_admin;
+    } else if edit_body.is_admin.is_some() && !jwt_claims.user.is_admin {
+        return ApiResult::error(403, "Not authorized to do this");
+    }
+
+    user_repo.update(user).await?;
+
+    ApiResult::success("User successfully updated")
+}
+
+#[get("/users/{user_key}")]
+pub async fn get_action(user_key: Path<String>, jwt_claims: JwtClaims, user_repo: UserRepo) -> ApiResult {
+    println!("user_key: {}, jwt_user_key: {}", user_key, jwt_claims.user.key.as_ref().unwrap());
+    if &*user_key != jwt_claims.user.key.as_ref().unwrap() && !jwt_claims.user.is_admin {
+        return ApiResult::error(403, "Not authorized to do this");
+    }
+    let user = user_repo.find(&*user_key).await?;
     ApiResult::success(user)
 }
