@@ -16,10 +16,8 @@ use base64::{
 pub fn generate_salt(length: usize) -> String {
     let mut bytes_len = length * 6;
     bytes_len /= 8;
-
     let mut rng = thread_rng();
     let mut bytes = vec![];
-    let mut i = 0;
     for _ in 0..bytes_len {
         bytes.push(rng.gen());
     }

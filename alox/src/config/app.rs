@@ -5,6 +5,10 @@ use crate::{
     }
 };
 
+use std::{
+    path::PathBuf
+};
+
 use serde::{
     Serialize,
     Deserialize
@@ -12,8 +16,19 @@ use serde::{
 
 #[derive(Debug, Serialize, Deserialize)]
 pub struct AppConfig {
-    pub identifier: String,
+    #[serde(default = "default_enabled")]
+    pub enabled: bool,
+    pub ident: String,
+    pub name: String,
+    pub host: String,
+    pub http_enabled: bool,
+    pub https_enabled: bool,
+    pub https_redir: bool,
     #[serde(rename = "proxy")]
     pub proxies: Vec<ProxyConfig>,
-    pub cms: Vec<CmsConfig>
+    pub cms: Option<CmsConfig>
+}
+
+fn default_enabled() -> bool {
+    true
 }

@@ -11,7 +11,8 @@ use crate::{
 
 use std::{
     pin::Pin,
-    ops::Deref
+    ops::Deref,
+    sync::Arc
 };
 
 use log::error;
@@ -21,7 +22,12 @@ use serde_json::{
     to_value
 };
 use maplit::hashmap;
-use futures::Future;
+use futures::{
+    future::{
+        Future,
+    },
+    task::Poll
+};
 use actix_web::{
     FromRequest,
     HttpRequest,
@@ -40,7 +46,8 @@ pub struct UserRepo {
 }
 
 impl UserRepo {
-    pub async fn new(connection: &Connection) -> Self {
+    pub async fn new(pool: Data<ArangoPool>) -> Self {
+        let connection = pool.get().await.unwrap();
         let database = connection.db("alox").await.expect("Database \"alox\" does not exist!");
         Self {
             database
@@ -131,12 +138,11 @@ impl FromRequest for UserRepo {
     type Future = impl Future<Output = Result<Self, Self::Error>>;
 
     fn from_request(req: &HttpRequest, _: &mut Payload) -> Self::Future {
-        let pool = req.app_data::<Data<ArangoPool>>().expect("No database pool!")
-            .clone();
+        let pool = req.app_data::<Data<ArangoPool>>().cloned().unwrap();
         async move {
-            let conn = pool.get().await.map_err(|_| ())?;
-            let user_repo = UserRepo::new(&conn).await;
-            Ok(user_repo)
+            Ok(
+                UserRepo::new(pool).await
+            )
         }
     }
 }

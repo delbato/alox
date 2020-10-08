@@ -9,7 +9,7 @@ use serde::{
 
 #[derive(Debug, Serialize, Deserialize)]
 pub struct CmsConfig {
-    pub host: String,
-    pub port: u16,
-    pub root_dir: PathBuf
+    pub enabled: bool,
+    pub root_dir: Option<PathBuf>,
+    pub base_url: String
 }
