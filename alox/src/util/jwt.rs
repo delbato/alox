@@ -1,8 +1,8 @@
 use crate::{
     model::{
         user::{
-            User,
-            UserWithoutPassword
+            UserFlat,
+            UserNoPw
         }
     }
 };
@@ -37,11 +37,11 @@ pub struct JwtClaims {
     pub aud: String,
     pub sub: String,
     pub exp: usize,
-    pub user: UserWithoutPassword
+    pub user: UserNoPw
 }
 
-impl From<User> for JwtClaims {
-    fn from(user: User) -> Self {
+impl From<UserFlat> for JwtClaims {
+    fn from(user: UserFlat) -> Self {
         let exp: DateTime<Utc> = Utc::now() + Duration::days(30);
         Self {
             sub: user.username.clone(),

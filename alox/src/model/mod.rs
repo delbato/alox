@@ -9,3 +9,5 @@ pub mod bucket;
 pub mod proxy;
 
 pub mod cms;
+
+pub mod page;

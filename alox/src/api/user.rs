@@ -9,7 +9,7 @@ use crate::{
         }
     },
     model::{
-        user::User
+        user::UserFlat
     },
     repo::{
         user::UserRepo
@@ -96,7 +96,7 @@ pub async fn register_action(register_body: Json<RegisterBody>, user_repo: UserR
     let password_salted = format!("{}{}", register_body.password, password_salt);
     let password_hashed = generate_hash(&password_salted);
 
-    let user = User {
+    let user = UserFlat {
         key: None,
         password: password_hashed,
         password_salt,
@@ -126,7 +126,7 @@ pub async fn edit_action(edit_body: Json<EditBody>, user_key: Path<String>, jwt_
         return ApiResult::error(403, "Not authorized to do this");
     }
 
-    let mut user = user_repo.find(&*user_key).await?;
+    let mut user = user_repo.find(&*user_key, false).await?.as_flat();
 
     if let Some(username) = edit_body.username.as_ref().cloned() {
         user.username = username;
@@ -173,6 +173,6 @@ pub async fn get_action(user_key: Path<String>, jwt_claims: JwtClaims, user_repo
     if &*user_key != jwt_claims.user.key.as_ref().unwrap() && !jwt_claims.user.is_admin {
         return ApiResult::error(403, "Not authorized to do this");
     }
-    let user = user_repo.find(&*user_key).await?;
+    let user = user_repo.find(&*user_key, true).await?.as_full();
     ApiResult::success(user)
 }

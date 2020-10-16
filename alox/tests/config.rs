@@ -27,3 +27,62 @@ fn test_config_alox() -> Result<()> {
     println!("{:#?}", alox_config);
     Ok(())
 }
+
+#[test]
+fn test_config_cms_block() -> Result<()> {
+    use alox::{
+        cms::{
+            block::{
+                Block,
+                BlockParamType
+            }
+        },
+        ron::from_str as ron_from_str,
+        serde_json::{
+            to_string_pretty,
+            from_str
+        }
+    };
+
+    let toml = "
+        ident = \"text_block\"
+        template = \"blocks/text_block.html\"
+
+        [params.title]
+        type = \"text\"
+
+        [params.content]
+        type = \"row\"
+        
+            [[params.content.column_types]]
+            type = \"asset\"
+
+            [[params.content.column_types]]
+            type = \"richtext\"
+    ";
+
+    let ron = "
+        (
+            ident: \"text_block\",
+            template: \"blocks/text_block.html\",
+            params: {
+                \"title\": text,
+                \"image\": asset,
+                \"content\": row([
+                    asset,
+                    list(text)
+                ])
+            }
+        )   
+    ";
+
+    //let block: Block = from_str(toml)?;
+    let mut block: Block = ron_from_str(ron)?;
+    let block_json = to_string_pretty(&block)?;
+    block = from_str(&block_json)?;
+
+    println!("{:#?}", block);
+    println!("{}", block_json);
+
+    Ok(())
+}

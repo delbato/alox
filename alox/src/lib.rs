@@ -18,6 +18,7 @@ extern crate multimap;
 pub extern crate serde;
 pub extern crate serde_json;
 pub extern crate toml;
+pub extern crate ron;
 
 extern crate bb8;
 extern crate arangors;
@@ -44,3 +45,5 @@ pub mod util;
 pub mod repo;
 
 pub mod middleware;
+
+pub mod cms;

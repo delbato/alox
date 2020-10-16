@@ -1,6 +1,9 @@
 use crate::{
     util::{
         generate_hash
+    },
+    model::{
+        permission::Permission
     }
 };
 
@@ -9,8 +12,47 @@ use serde::{
     Deserialize
 };
 
+#[derive(Deserialize)]
+#[serde(tag = "type")]
+pub enum User {
+    #[serde(rename = "flat")]
+    Flat(UserFlat),
+    #[serde(rename = "flat")]
+    Full(UserFull),
+}
+
+impl User {
+    pub fn as_flat(self) -> UserFlat {
+        if let User::Flat(user_flat) = self {
+            user_flat
+        } else {
+            panic!("Not matching!");
+        }
+    }
+
+    pub fn as_full(self) -> UserFull {
+        if let User::Full(user_full) = self {
+            user_full
+        } else {
+            panic!("Not matching!");
+        }
+    }
+}
+
+#[derive(Serialize, Deserialize)]
+pub struct UserFull {
+    #[serde(rename = "_key")]
+    pub key: Option<String>,
+    pub username: String,
+    pub email: String,
+    pub password: String,
+    pub password_salt: String,
+    pub is_admin: bool,
+    pub permissions: Vec<Permission>
+}
+
 #[derive(Debug, Serialize, Deserialize)]
-pub struct User {
+pub struct UserFlat {
     #[serde(rename = "_key")]
     pub key: Option<String>,
     pub username: String,
@@ -21,7 +63,7 @@ pub struct User {
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
-pub struct UserWithoutPassword {
+pub struct UserNoPw {
     #[serde(rename = "_key")]
     pub key: Option<String>,
     pub username: String,
@@ -29,7 +71,7 @@ pub struct UserWithoutPassword {
     pub is_admin: bool
 }
 
-impl User {
+impl UserFlat {
     pub fn new() -> Self {
         Self {
             key: None,
@@ -48,8 +90,8 @@ impl User {
     }
 }
 
-impl From<User> for UserWithoutPassword {
-    fn from(user: User) -> Self {
+impl From<UserFlat> for UserNoPw {
+    fn from(user: UserFlat) -> Self {
         Self {
             key: user.key,
             username: user.username,

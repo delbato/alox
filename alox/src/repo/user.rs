@@ -5,7 +5,10 @@ use crate::{
         ArangoPool
     },
     model::{
-        user::User
+        user::{
+            UserFlat,
+            User
+        }
     }
 };
 
@@ -54,10 +57,26 @@ impl UserRepo {
         }
     }
 
-    pub async fn find(&self, user_key: &str) -> Result<User, ()> {
-        let mut result_vec: Vec<User> = self.database.aql_bind_vars("
-            RETURN DOCUMENT(CONCAT(\"users/\", @key))
-        ", hashmap!{
+    pub async fn find(&self, user_key: &str, full: bool) -> Result<User, ()> {
+        let query = if full {
+            "
+            LET user = DOCUMENT(CONCAT(\"users/\", @key))
+            user.type = \"full\"
+            LET permissions = (
+                FOR perm IN permissions
+                    FILTER perm._key_user = @key
+                    RETURN perm
+            )
+            return MERGE(user, { permissions: permissions })
+            "
+        } else {
+            "
+            LET user = DOCUMENT(CONCAT(\"users/\", @key))
+            user.type = \"flat\"
+            RETURN user
+            "
+        };
+        let mut result_vec: Vec<User> = self.database.aql_bind_vars(query, hashmap!{
             "key" => user_key.into()
         }).await
             .map_err(|err| {
@@ -72,9 +91,9 @@ impl UserRepo {
         }
     }
 
-    pub async fn find_by_username(&self, username: &str) -> Result<User, ()> {
+    pub async fn find_by_username(&self, username: &str) -> Result<UserFlat, ()> {
         println!("Attempting to find by username...");
-        let mut result_vec: Vec<User> = self.database.aql_bind_vars("
+        let mut result_vec: Vec<UserFlat> = self.database.aql_bind_vars("
             FOR u IN users
                 FILTER u.username == @username
                 RETURN u
@@ -96,8 +115,8 @@ impl UserRepo {
             .ok_or(())
     }
 
-    pub async fn insert(&self, user: User) -> Result<User, ()> {
-        let mut result_vec: Vec<User> = self.database.aql_bind_vars("
+    pub async fn insert(&self, user: UserFlat) -> Result<UserFlat, ()> {
+        let mut result_vec: Vec<UserFlat> = self.database.aql_bind_vars("
             INSERT @user INTO users
             RETURN NEW
         ", hashmap!{
@@ -111,8 +130,8 @@ impl UserRepo {
             .ok_or(())
     }
 
-    pub async fn update(&self, user: User) -> Result<User, ()> {
-        let mut result_vec: Vec<User> = self.database.aql_bind_vars("
+    pub async fn update(&self, user: UserFlat) -> Result<UserFlat, ()> {
+        let mut result_vec: Vec<UserFlat> = self.database.aql_bind_vars("
             LET doc = DOCUMENT(CONCAT(\"users/\", @user._key))
             UPDATE doc WITH @user IN users
             RETURN NEW

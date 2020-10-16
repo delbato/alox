@@ -20,8 +20,8 @@ use alox::{
     },
     model::{
         user::{
-            User,
-            UserWithoutPassword
+            UserFlat,
+            UserNoPw
         }
     },
     actix_web::{

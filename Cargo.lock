@@ -447,6 +447,7 @@ dependencies = [
  "maplit",
  "multimap",
  "rand",
+ "ron",
  "serde",
  "serde_json",
  "tokio",
@@ -1851,6 +1852,17 @@ dependencies = [
  "untrusted",
  "web-sys",
  "winapi 0.3.9",
+]
+
+[[package]]
+name = "ron"
+version = "0.6.2"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "f8a58080b7bb83b2ea28c3b7a9a994fd5e310330b7c8ca5258d99b98128ecfe4"
+dependencies = [
+ "base64 0.12.3",
+ "bitflags",
+ "serde",
 ]
 
 [[package]]

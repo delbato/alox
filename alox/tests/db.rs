@@ -9,8 +9,8 @@ use alox::{
     },
     model::{
         user::{
-            User,
-            UserWithoutPassword
+            UserFlat,
+            UserNoPw
         }
     },
     serde_json::to_string

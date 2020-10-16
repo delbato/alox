@@ -1,5 +1,3 @@
-pub mod page;
-
 use std::{
     path::PathBuf
 };
