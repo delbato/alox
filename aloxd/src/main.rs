@@ -1,17 +1,16 @@
-extern crate alox;
+#![feature(type_alias_impl_trait)]
 
-pub mod app;
+include!("head.rs");
 
-use alox::{
-    actix_web::{
-        self
-    }
+extern crate clap;
+
+use std::{
+    result::Result as StdResult,
+    error::Error
 };
 
-type Result<T> = std::result::Result<T, Box<dyn std::error::Error>>;
+type Result<T> = StdResult<T, Box<dyn Error>>;
 
-#[actix_web::main]
-async fn main() -> Result<()> {
-    app::start_alox().await?;
-    Ok(())
+fn main() {
+    println!("Works!");
 }

@@ -1,6 +1,5 @@
 [workspace]
 members = [
-    "alox",
     "aloxd",
     "alox-cli"
 ]
