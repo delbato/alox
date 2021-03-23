@@ -1,5 +1,5 @@
 [workspace]
 members = [
-    "aloxd",
-    "alox-cli"
+    "src/server",
+    "src/cli"
 ]

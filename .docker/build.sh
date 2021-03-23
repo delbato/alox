@@ -2,25 +2,25 @@
 
 echo "Build directory: $PWD"
 
-TARGET_DIR=""
+USER_ID=$(id -u)
+GROUP_ID=$(id -g)
+
+COMMAND="docker run -v $PWD:/volume -v $PWD/.docker/cache:/root/.cargo/registry --rm -t clux/muslrust"
+TARGET_DIR="target/x86_64-unknown-linux-musl"
+OUTPUT_DIR=""
 
 if [ $CARGO_RELEASE = true ] ; then
     echo Building release image...
-    cargo build --all --release
-    TARGET_DIR="target/x86_64-unknown-linux-musl/release"
+    $COMMAND cargo build --all --release
+    OUTPUT_DIR="$TARGET_DIR/release"
 elif [ $CARGO_RELEASE = false ] ; then
     echo Building debug image...
-    cargo build --all
-    TARGET_DIR="target/x86_64-unknown-linux-musl/debug"
-    ls $TARGET_DIR/alox*
+    $COMMAND cargo build --all
+    OUTPUT_DIR="$TARGET_DIR/debug"
 else
     exit 129
 fi
 
-if [ \( -f $TARGET_DIR/aloxd \) -a \( -f $TARGET_DIR/alox-cli \) ] ; then
-    cp $TARGET_DIR/aloxd /bin
-    cp $TARGET_DIR/alox-cli /bin
-    exit 0
-else
-    exit 128
-fi
+$COMMAND chown -R $USER_ID:$GROUP_ID $TARGET_DIR
+export OUTPUT_DIR=$OUTPUT_DIR
+docker build . -f .docker/alox.Dockerfile -t alox:latest
