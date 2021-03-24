@@ -13,14 +13,17 @@ if [ $CARGO_RELEASE = true ] ; then
     echo Building release image...
     $COMMAND cargo build --all --release
     OUTPUT_DIR="$TARGET_DIR/release"
+    docker build . -f .docker/alox.Dockerfile -t alox:latest --build-arg OUTPUT_DIR=$OUTPUT_DIR
 elif [ $CARGO_RELEASE = false ] ; then
     echo Building debug image...
     $COMMAND cargo build --all
     OUTPUT_DIR="$TARGET_DIR/debug"
+    docker build . -f .docker/alox.Dockerfile -t alox:dev --build-arg OUTPUT_DIR=$OUTPUT_DIR
 else
     exit 129
 fi
 
 $COMMAND chown -R $USER_ID:$GROUP_ID $TARGET_DIR
-export OUTPUT_DIR=$OUTPUT_DIR
-docker build . -f .docker/alox.Dockerfile -t alox:latest
+$COMMAND chmod -R o=rwx $TARGET_DIR
+
+exit 0

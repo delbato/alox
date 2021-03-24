@@ -1,0 +1,10 @@
+config_dir = "/etc/alox/conf.d"
+cache_dir = "/var/alox/cache"
+api_prefix = "/api"
+secret = "12345"
+
+[arango]
+url = "http://alox_db:8529"
+username = "root"
+password = "alox"
+database = "alox"

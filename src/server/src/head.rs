@@ -18,8 +18,8 @@ pub extern crate serde_json;
 pub extern crate toml;
 pub extern crate ron;
 
-extern crate bb8;
-extern crate arangors;
+pub extern crate bb8;
+pub extern crate arangors;
 
 extern crate futures;
 extern crate futures_util;

@@ -60,7 +60,7 @@ pub struct LoginBody {
     pub password: String
 }
 
-#[post("/users/login")]
+#[post("/login")]
 pub async fn login_action(login_body: Json<LoginBody>, user_repo: UserRepo, jwt: Data<JwtManager>) -> ApiResult {
     let user = user_repo.find_by_username(&login_body.username).await
         .map_err(|_| ApiResult::error(404, "User not found!").unwrap_err())?;
@@ -85,7 +85,7 @@ pub struct RegisterBody {
     pub email: String
 }
 
-#[post("/users")]
+#[post("")]
 pub async fn register_action(register_body: Json<RegisterBody>, user_repo: UserRepo) -> ApiResult {
     let user_exists = user_repo.find_by_username(&register_body.username).await
         .is_ok();
@@ -121,7 +121,7 @@ pub struct EditBody {
     is_admin: Option<bool>
 }
 
-#[put("/users/{user_key}")]
+#[put("/{user_key}")]
 pub async fn edit_action(edit_body: Json<EditBody>, user_key: Path<String>, jwt_claims: JwtClaims, user_repo: UserRepo) -> ApiResult {
     if &*user_key != jwt_claims.user.key.as_ref().unwrap() && !jwt_claims.user.is_admin {
         return ApiResult::error(403, "Not authorized to do this");
@@ -168,7 +168,7 @@ pub async fn edit_action(edit_body: Json<EditBody>, user_key: Path<String>, jwt_
     ApiResult::success("User successfully updated")
 }
 
-#[get("/users/{user_key}")]
+#[get("/{user_key}")]
 pub async fn get_action(user_key: Path<String>, jwt_claims: JwtClaims, user_repo: UserRepo) -> ApiResult {
     println!("user_key: {}, jwt_user_key: {}", user_key, jwt_claims.user.key.as_ref().unwrap());
     if &*user_key != jwt_claims.user.key.as_ref().unwrap() && !jwt_claims.user.is_admin {
@@ -178,7 +178,7 @@ pub async fn get_action(user_key: Path<String>, jwt_claims: JwtClaims, user_repo
     ApiResult::success(user)
 }
 
-#[get("/users/{user_key/permissions")]
+#[get("/{user_key}/permissions")]
 pub async fn get_permissions_action(user_key: Path<String>, jwt_claims: JwtClaims, perm_repo: PermissionRepo) -> ApiResult {
     if &*user_key != jwt_claims.user.key.as_ref().unwrap() && !jwt_claims.user.is_admin {
         return ApiResult::error(403, "Not authorized to do this");

@@ -53,7 +53,7 @@ pub struct UserFull {
 
 #[derive(Debug, Serialize, Deserialize)]
 pub struct UserFlat {
-    #[serde(rename = "_key")]
+    #[serde(rename = "_key", skip_serializing_if = "Option::is_none")]
     pub key: Option<String>,
     pub username: String,
     pub email: String,

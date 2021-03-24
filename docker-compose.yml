@@ -1,0 +1,22 @@
+version: "3"
+services:
+    db:
+        container_name: alox_db
+        image: arangodb:3.7.1
+        ports:
+            -  8529:8529
+        environment:
+            ARANGO_ROOT_PASSWORD: alox
+        volumes:
+            -  ./dev/var/db:/var/lib/arangodb3
+    runner:
+        container_name: alox_runner
+        image: alox:dev
+        depends_on:
+            -  db
+        ports:
+            -  8000:80
+            -  8443:443
+        volumes:
+            -  ./dev/etc:/etc/alox
+            -  ./dev/var:/var/alox

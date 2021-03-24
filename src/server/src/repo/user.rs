@@ -116,13 +116,15 @@ impl UserRepo {
     }
 
     pub async fn insert(&self, user: UserFlat) -> Result<UserFlat, ()> {
+        let json = json!(&user);
+        println!("{}", json);
         let mut result_vec: Vec<UserFlat> = self.database.aql_bind_vars("
             INSERT @user INTO users
             RETURN NEW
         ", hashmap!{
-            "user" => json!(user)
+            "user" => json
         }).await
-            .map_err(|_| ())?;
+            .map_err(|e| { eprintln!("{}", e); () })?;
         if result_vec.len() != 1 {
             return Err(());
         }
