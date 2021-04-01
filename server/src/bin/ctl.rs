@@ -191,6 +191,7 @@ async fn subcmd_users<'c>(
                 email: params.email,
                 username: params.username,
                 is_admin: true,
+                permissions: vec![]
             };
             let json = json!(&user);
             println!("{}", json);

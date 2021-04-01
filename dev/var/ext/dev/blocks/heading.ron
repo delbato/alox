@@ -1,0 +1,9 @@
+(
+    ident: "heading",
+    name: "Heading",
+    description: "Heading with type",
+    template: "heading.tera",
+    params: {
+        "text": text
+    }
+)

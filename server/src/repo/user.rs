@@ -62,12 +62,7 @@ impl UserRepo {
             "
             LET user = DOCUMENT(CONCAT(\"users/\", @key))
             user.type = \"full\"
-            LET permissions = (
-                FOR perm IN permissions
-                    FILTER perm._key_user = @key
-                    RETURN perm
-            )
-            return MERGE(user, { permissions: permissions })
+            return user
             "
         } else {
             "

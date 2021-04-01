@@ -1,0 +1,2 @@
+type = "ext"
+ext_dir = "/var/alox/ext/dev"

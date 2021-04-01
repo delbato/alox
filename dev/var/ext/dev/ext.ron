@@ -1,0 +1,8 @@
+{
+    ident: "dev",
+    name: "DevExtension",
+    description: "Just an extension to test alox during development.",
+    styles: {
+        "style.scss": "style.css"
+    }
+}

@@ -1,0 +1,7 @@
+{% if type == "h1" %}
+<h1>{{ title }}</h1>
+{% elif type == "h2" %}
+<h2>{{ title }}</h2>
+{% elif type == "h3" %}
+<h3>{{ title }}</h3>
+{% endif %}

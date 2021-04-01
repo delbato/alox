@@ -1,0 +1,10 @@
+(
+    ident: "default",
+    name: "Default Page Layout",
+    template: "layouts/default.tera",
+    params: {
+        "header": list,
+        "body": list,
+        "footer": list
+    }
+)

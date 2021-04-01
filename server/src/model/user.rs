@@ -1,9 +1,6 @@
 use crate::{
     util::{
         generate_hash
-    },
-    model::{
-        permission::Permission
     }
 };
 
@@ -11,6 +8,30 @@ use serde::{
     Serialize,
     Deserialize
 };
+
+
+fn default_permissions() -> Vec<Permission> { vec![] }
+
+#[derive(Debug, Clone, Serialize, Deserialize)]
+#[serde(untagged)]
+pub enum PermissionType {
+    #[serde(rename = "read")]
+    Read,
+    #[serde(rename = "write")]
+    Write,
+    #[serde(rename = "admin")]
+    Admin,
+    #[serde(rename = "owner")]
+    Owner
+}
+
+
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct Permission {
+    #[serde(rename = "_key_app")]
+    pub key_app: String,
+    pub permission_type: PermissionType
+}
 
 #[derive(Deserialize)]
 #[serde(tag = "type")]
@@ -59,7 +80,9 @@ pub struct UserFlat {
     pub email: String,
     pub password: String,
     pub password_salt: String,
-    pub is_admin: bool
+    pub is_admin: bool,
+    #[serde(default = "default_permissions")]
+    pub permissions: Vec<Permission>
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
@@ -78,6 +101,7 @@ pub struct UserClaims {
     pub username: String,
     pub email: String,
     pub is_admin: bool,
+    #[serde(default = "default_permissions")]
     pub permissions: Vec<Permission>
 }
 
@@ -90,6 +114,7 @@ impl UserFlat {
             password: String::new(),
             password_salt: String::new(),
             is_admin: false,
+            permissions: vec![]
         }
     }
 

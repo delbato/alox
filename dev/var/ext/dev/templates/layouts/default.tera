@@ -1,0 +1,8 @@
+<html>
+    <head>
+        {%  %}
+        <title>{{ title }}</title>
+    </head>
+    {% include "pages/partials/header.tera" %}
+    {% include "pages/partials/footer.tera" %}
+</html>

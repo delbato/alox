@@ -12,8 +12,7 @@ use crate::{
         user::UserFlat
     },
     repo::{
-        user::UserRepo,
-        permission::PermissionRepo
+        user::UserRepo
     },
     util::{
         jwt::{
@@ -103,7 +102,8 @@ pub async fn register_action(register_body: Json<RegisterBody>, user_repo: UserR
         password_salt,
         email: register_body.email.clone(),
         username: register_body.username.clone(),
-        is_admin: false
+        is_admin: false,
+        permissions: vec![]
     };
 
     user_repo.insert(user).await
@@ -176,13 +176,4 @@ pub async fn get_action(user_key: Path<String>, jwt_claims: JwtClaims, user_repo
     }
     let user = user_repo.find(&*user_key, true).await?.as_full();
     ApiResult::success(user)
-}
-
-#[get("/{user_key}/permissions")]
-pub async fn get_permissions_action(user_key: Path<String>, jwt_claims: JwtClaims, perm_repo: PermissionRepo) -> ApiResult {
-    if &*user_key != jwt_claims.user.key.as_ref().unwrap() && !jwt_claims.user.is_admin {
-        return ApiResult::error(403, "Not authorized to do this");
-    }
-    let permissions = perm_repo.find_for_user(&user_key).await?;
-    ApiResult::success(permissions)
 }
