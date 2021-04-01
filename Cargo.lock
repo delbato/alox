@@ -428,16 +428,7 @@ dependencies = [
 ]
 
 [[package]]
-name = "alox-cli"
-version = "0.1.0"
-dependencies = [
- "alox-server",
- "clap",
- "string-error",
-]
-
-[[package]]
-name = "alox-server"
+name = "alox"
 version = "0.1.0"
 dependencies = [
  "actix-router",

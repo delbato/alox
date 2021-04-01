@@ -1,72 +1,44 @@
-#![feature(min_type_alias_impl_trait)]
+extern crate alox;
 
-include!("head.rs");
-
-extern crate ctrlc;
-
-use crate::{
-    config::{
-        alox::{
-            AloxConfig
-        }
-    },
-    db::{
-        ArangoConnectionManager,
-        ArangoPool
-    },
-    util::{
-        jwt::JwtManager
-    }
+use alox::{
+    config::alox::AloxConfig,
+    db::{ArangoConnectionManager, ArangoPool},
+    util::jwt::JwtManager,
+    api
 };
 
 use std::{
-    thread::{
-        sleep
-    },
-    sync::{
-        Arc,
-        atomic::{
-            AtomicBool,
-            Ordering
-        }
-    },
-    path::PathBuf,
-    fs::{
-        File
-    },
-    io::{
-        Read,
-        BufRead
-    },
-    time::{
-        Duration
-    },
     error::Error as StdError,
-    result::Result as StdResult
+    fs::File,
+    io::{BufRead, Read},
+    path::PathBuf,
+    result::Result as StdResult,
+    sync::{
+        atomic::{AtomicBool, Ordering},
+        Arc,
+    },
+    thread::sleep,
+    time::Duration,
 };
 
-use bb8::Pool;
-use toml::{
-    from_str
-};
-use ctrlc::{
-    set_handler
-};
-use clap::Clap;
 use actix_web::{
-    HttpServer,
-    App,
-    web::{
-        Data,
-        self
-    }
+    web::{self, Data},
+    App, HttpServer,
 };
+use bb8::Pool;
+use clap::Clap;
+use ctrlc::set_handler;
+use toml::from_str;
 
 type Result<T> = StdResult<T, Box<dyn StdError>>;
 
 /// CLI Run parameters
 #[derive(Clap)]
-#[clap(name = "aloxd", version = "0.1.0", author = "Daniel Wanner <delbato@pm.me>")]
+#[clap(
+    name = "aloxd",
+    version = "0.1.0",
+    author = "Daniel Wanner <delbato@pm.me>"
+)]
 pub struct RunOps {
     /// Path to the main config file
     #[clap(short, long, default_value = "/etc/alox/alox.toml")]
@@ -80,7 +52,7 @@ pub struct RunOps {
 }
 
 #[actix_rt::main]
-async fn main() -> Result<()> {
+pub async fn main() -> Result<()> {
     let run_ops = RunOps::parse();
     let mut file = File::open(&run_ops.config_file)?;
     let mut file_contents = String::new();
@@ -92,7 +64,7 @@ async fn main() -> Result<()> {
     let arango_manager = ArangoConnectionManager::new(
         &alox_config.arango.url,
         &alox_config.arango.username,
-        &alox_config.arango.password
+        &alox_config.arango.password,
     );
     let arango_pool = Pool::builder().build(arango_manager).await?;
 
@@ -106,7 +78,8 @@ async fn main() -> Result<()> {
             .data(jwt_manager)
             .service(api::get_api_scope(&alox_config.api_prefix))
     })
-        .bind(&format!("0.0.0.0:{}", http_port))?
-        .run().await?;
+    .bind(&format!("0.0.0.0:{}", http_port))?
+    .run()
+    .await?;
     Ok(())
 }

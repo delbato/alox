@@ -11,12 +11,12 @@ OUTPUT_DIR=""
 
 if [ $CARGO_RELEASE = true ] ; then
     echo Building release image...
-    $COMMAND cargo build --all --release
+    $COMMAND cargo build -p alox --release
     OUTPUT_DIR="$TARGET_DIR/release"
     docker build . -f .docker/alox.Dockerfile -t alox:latest --build-arg OUTPUT_DIR=$OUTPUT_DIR
 elif [ $CARGO_RELEASE = false ] ; then
     echo Building debug image...
-    $COMMAND cargo build --all
+    $COMMAND cargo build -p alox
     OUTPUT_DIR="$TARGET_DIR/debug"
     docker build . -f .docker/alox.Dockerfile -t alox:dev --build-arg OUTPUT_DIR=$OUTPUT_DIR
 else

@@ -1,34 +1,17 @@
 extern crate alox;
 
-use std::{
-    result::Result as StdResult,
-    error::Error,
-    fs::File,
-    io::Read
-};
+use std::{error::Error, fs::File, io::Read, result::Result as StdResult};
 
-use alox::{
-    config::{
-    },
-    toml::from_str
-};
+use alox::toml::from_str;
 
 type Result<T> = StdResult<T, Box<dyn std::error::Error>>;
 
 #[test]
 fn test_config_cms_block() -> Result<()> {
     use alox::{
-        cms::{
-            block::{
-                Block,
-                BlockParamType
-            }
-        },
+        cms::block::{Block, BlockParamType},
         ron::from_str as ron_from_str,
-        serde_json::{
-            to_string_pretty,
-            from_str
-        }
+        serde_json::{from_str, to_string_pretty},
     };
 
     let toml = "

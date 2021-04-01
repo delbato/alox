@@ -1,5 +1,5 @@
 [package]
-name = "alox-server"
+name = "alox"
 version = "0.1.0"
 authors = ["Daniel Wanner <daniel.wanner@pm.me>"]
 edition = "2018"
@@ -9,8 +9,12 @@ path = "src/lib.rs"
 name = "alox"
 
 [[bin]]
-path = "src/main.rs"
+path = "src/bin/server.rs"
 name = "aloxd"
+
+[[bin]]
+path = "src/bin/ctl.rs"
+name = "aloxctl"
 
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
 
@@ -46,13 +50,11 @@ clap = "3.0.0-beta.2"
 futures = "0.3.5"
 futures-util = "0.3.5"
 async-trait = "0.1.40"
+string-error = "0.1.0"
 
 [dependencies.serde]
 version = "1.0.115"
 features = [ "derive" ]
-
-[dev-dependencies]
-string-error = "0.1.0"
 
 [dev-dependencies.tokio]
 version = "0.2.22"
