@@ -1,10 +1,10 @@
 extern crate alox;
 
 use alox::{
+    api,
     config::alox::AloxConfig,
     db::{ArangoConnectionManager, ArangoPool},
     util::jwt::JwtManager,
-    api
 };
 
 use std::{
@@ -15,6 +15,7 @@ use std::{
     result::Result as StdResult,
     sync::{
         atomic::{AtomicBool, Ordering},
+        mpsc::channel,
         Arc,
     },
     thread::sleep,
@@ -66,11 +67,15 @@ pub async fn main() -> Result<()> {
         &alox_config.arango.username,
         &alox_config.arango.password,
     );
-    let arango_pool = Pool::builder().build(arango_manager).await?;
 
+    let (mut tx, rx) = channel::<bool>();
+
+    let mut should_restart = false;
+    let arango_pool = Pool::builder().build(arango_manager).await?;
     let jwt_manager = JwtManager::new(&alox_config.secret);
 
-    HttpServer::new(move || {
+
+    let http_server = HttpServer::new(move || {
         let arango_pool = arango_pool.clone();
         let jwt_manager = jwt_manager.clone();
         App::new()
@@ -81,5 +86,6 @@ pub async fn main() -> Result<()> {
     .bind(&format!("0.0.0.0:{}", http_port))?
     .run()
     .await?;
+
     Ok(())
 }

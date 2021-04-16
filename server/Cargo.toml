@@ -50,6 +50,7 @@ clap = "3.0.0-beta.2"
 futures = "0.3.5"
 futures-util = "0.3.5"
 async-trait = "0.1.40"
+async-recursion = "0.3.2"
 string-error = "0.1.0"
 
 [dependencies.serde]

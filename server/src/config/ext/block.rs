@@ -24,14 +24,24 @@ pub struct Block {
     pub children: BlockChildType
 }
 
-#[derive(Debug, Clone, Serialize, Deserialize)]
+#[derive(Debug, Serialize, Deserialize)]
 pub enum BlockChildType {
     #[serde(rename = "none")]
     None,
     #[serde(rename = "grid")]
-    Grid(u8, u8),
+    Grid {
+        width: u8,
+        height: u8
+    },
     #[serde(rename = "autogrid")]
-    AutoGrid(bool, u8),
+    AutoGrid {
+        by_row: bool,
+        size: u8
+    },
+    #[serde(rename = "array")]
+    Array {
+        size: u8
+    },
     #[serde(rename = "list")]
     List
 }

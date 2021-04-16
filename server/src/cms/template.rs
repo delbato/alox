@@ -23,7 +23,10 @@ impl TemplateService {
         let dir_str = template_dir.to_str().ok_or(())?;
         let mut tera = Tera::new(dir_str)
             .map_err(|_| ())?;
-        tera.autoescape_on(vec![]);
+        tera.autoescape_on(vec![
+            ".html",
+            ".html.tera"
+        ]);
         let tera_arc = Arc::new(RwLock::new(tera));
         Ok(Self{
             tera_arc

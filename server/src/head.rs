@@ -24,6 +24,7 @@ pub extern crate arangors;
 extern crate futures;
 extern crate futures_util;
 extern crate async_trait;
+extern crate async_recursion;
 
 /// API endpoints
 pub mod api;
