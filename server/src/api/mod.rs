@@ -1,13 +1,22 @@
+/// User API endpoints
 pub mod user;
 
+/// Bucket API endpoints
 pub mod bucket;
 
+/// Site API endpoints
 pub mod site;
 
+/// Content API endpoints
 pub mod content;
 
+/// Response API endpoints
 pub mod response;
 
+/// Page API endpoints
+pub mod page;
+
+/// API error logic
 pub mod error;
 
 use crate::middleware::jwt::{Jwt, JwtMiddleware};

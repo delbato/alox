@@ -5,3 +5,5 @@ pub mod site;
 pub mod page;
 
 pub mod content;
+
+pub mod ext;

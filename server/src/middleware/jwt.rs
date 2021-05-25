@@ -50,6 +50,7 @@ pub struct Jwt {
 }
 
 impl Jwt {
+    /// Adds a path/method exlusion map
     pub fn with_exclude<S>(mut self, paths: HashMap<S, Vec<S>>) -> Self
     where S: Into<String> {
         for (path, path_methods) in paths.into_iter() {
@@ -70,6 +71,7 @@ impl Jwt {
         self
     }
 
+    /// Adds a requirement for the user to be admin
     pub fn with_require_admin(mut self, require_admin: bool) -> Self {
         self.require_admin = require_admin;
         self

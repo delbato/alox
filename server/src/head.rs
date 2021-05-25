@@ -26,19 +26,26 @@ extern crate futures_util;
 extern crate async_trait;
 extern crate async_recursion;
 
-/// API endpoints
-pub mod api;
-
+/// Config structs
 pub mod config;
 
+/// Database models
 pub mod model;
 
+/// Database connection types
 pub mod db;
 
+/// Utility module
 pub mod util;
 
+/// Database repositories
 pub mod repo;
 
+/// Actix middlewares
 pub mod middleware;
 
+/// CMS HTTP Logic
 pub mod cms;
+
+/// API HTTP
+pub mod api;
