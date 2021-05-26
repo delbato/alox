@@ -845,6 +845,12 @@ dependencies = [
 ]
 
 [[package]]
+name = "command-macros"
+version = "0.2.7"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "201c7eb93a3d071a2b547c2fbf118c0169b670d98b6fe676f4e0988f9523bf79"
+
+[[package]]
 name = "cookie"
 version = "0.14.2"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -3283,3 +3289,7 @@ checksum = "85e60b0d1b5f99db2556934e21937020776a5d31520bf169e851ac44e6420214"
 [[package]]
 name = "xtask"
 version = "0.1.0"
+dependencies = [
+ "clap",
+ "command-macros",
+]

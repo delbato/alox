@@ -4,7 +4,7 @@ api_prefix = "/api"
 secret = "12345"
 
 [arango]
-url = "http://alox_db:8529"
+url = "http://localhost:8529"
 username = "root"
 password = "alox"
 database = "alox"
