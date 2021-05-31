@@ -5,6 +5,9 @@ use crate::{
         ArangoPool
     },
     model::{
+        site::{
+            SiteFlat
+        }
     }
 };
 
@@ -53,6 +56,11 @@ impl SiteRepo {
         Self {
             database
         }
+    }
+
+    pub async fn insert(&self, site: SiteFlat) -> Result<(), ()> {
+        
+        Err(())
     }
 }
 

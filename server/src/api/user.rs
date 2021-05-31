@@ -147,7 +147,7 @@ pub async fn edit_action(edit_body: Json<EditBody>, user_key: Path<String>, jwt_
         }
         let salt = generate_salt(16);
         let password_new_salted = format!("{}{}", salt, password);
-        let password_new_hashed = generate_hash(&password_new_salted);
+        let password_new_hashed = generate_hash(&password_new_salted); 
         user.password = password_new_hashed;
         user.password_salt = salt;
     }

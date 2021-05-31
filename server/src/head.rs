@@ -42,7 +42,7 @@ pub mod util;
 pub mod repo;
 
 /// Actix middlewares
-pub mod middleware;
+pub mod mdw;
 
 /// CMS HTTP Logic
 pub mod cms;

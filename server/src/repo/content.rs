@@ -66,7 +66,6 @@ impl ContentRepo {
         let mut content_flat = self.load_content_flat(content_key).await?;
         let mut children_flat = None;
         mem::swap(&mut children_flat, &mut content_flat.children);
-        
         let mut content = Content::from(content_flat);
         if let Some(children_flat) = children_flat {
             let content_children =  match children_flat {

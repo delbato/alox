@@ -16,7 +16,7 @@ pub struct SiteFlat {
     pub host: String,
     pub name: String,
     pub description: Option<String>,
-    pub root_page: Option<String>
+    pub key_root_page: Option<String>
 }
 
 #[derive(Serialize, Deserialize)]
@@ -28,5 +28,5 @@ pub struct Site {
     pub host: String,
     pub name: String,
     pub description: Option<String>,
-    pub root_page: Option<String>
+    pub key_root_page: Option<String>
 }

@@ -7,3 +7,5 @@ pub mod content;
 pub mod page;
 
 pub mod site;
+
+pub mod perm;

@@ -24,7 +24,10 @@ struct RunArgs {
 enum SubCommand {
     #[clap(version = "0.1.0", about = "Builds the container image")]
     #[clap(setting = AppSettings::ColoredHelp)]
-    BuildImage(BuildImageArgs)
+    BuildImage(BuildImageArgs),
+    #[clap(version = "0.1.0", about = "Starts aloxd on the local machine")]
+    #[clap(setting = AppSettings::ColoredHelp)]
+    LocalUp
 }
 
 #[derive(Clap, Debug)]
@@ -56,9 +59,15 @@ fn main() -> Result<()> {
     let run_args = RunArgs::parse();
 
     match run_args.subcmd {
-        SubCommand::BuildImage(args) => subcmd_build_image(args)?
+        SubCommand::BuildImage(args) => subcmd_build_image(args)?,
+        SubCommand::LocalUp => subcmd_local_up()?
     };
 
+    Ok(())
+}
+
+fn subcmd_local_up() -> Result<()> {
+    cmd!(cargo run ("--bin") aloxd).status()?;
     Ok(())
 }
 
